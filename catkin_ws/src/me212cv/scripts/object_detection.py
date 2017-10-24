@@ -42,8 +42,8 @@ cx = msg.P[2]
 cy = msg.P[6]
 
 def main():
-    useHSV   = False
-    useDepth = False
+    useHSV   = True
+    useDepth = True
     if not useHSV:
         # Task 1
         # subscribe to image
@@ -178,7 +178,7 @@ def rosRGBDCallBack(rgb_data, depth_data):
         showPyramid(centerx, centery, zc, w, h)
     img_pub1.publish(cv_bridge.cv2_to_imgmsg(cv_image, encoding="passthrough"))
 
-def getXYZ(xp, yp, zc, fx,fy,cx,cy):
+def getXYZ(xp, yp, zc, fx, fy, cx, cy):
     #### Definition:
     # cx, cy : image center(pixel)
     # fx, fy : focal length
@@ -189,7 +189,16 @@ def getXYZ(xp, yp, zc, fx,fy,cx,cy):
     # x = ??
     # y = ??
     # z = ??
-    return (x,y,z)
+    K = (np.array([[fx, 0, cx],
+                   [0, fy, cy],
+                   [0, 0, 1]]))
+    K_inv = np.linalg.inv(K)
+    point_vec = np.array([[xp],
+                          [yp],
+                          [1]])
+    world_point_vec = np.dot(K_inv, point_vec)
+    x, y, z = world_point_vec[0]/zc, world_point_vec[1]/zc, world_point_vec[2]
+    return (z,-x,-y)
 
 
 def showImage(cv_image, mask_erode_image, mask_image):
